@@ -1,4 +1,4 @@
-name: mops test
+name: CI
 
 on:
   push:
@@ -8,14 +8,14 @@ on:
   pull_request:
 
 jobs:
-  test:
+  build:
     strategy:
-      max-parallel: 3
+      max-parallel: 2
       matrix:
+        moc-version: [0.10.1]
         # mops-version: [./cli, ic-mops@latest, ic-mops@0.28.2]
-        moc-version: [0.10.1, latest]
         mops-version: [./cli]
-        node-version: [18, 20]
+        node-version: [20]
 
     runs-on: ubuntu-latest
     name: node ${{ matrix.node-version }}, moc ${{ matrix.moc-version }}, ${{ matrix.mops-version }}
@@ -26,6 +26,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+      - uses: oven-sh/setup-bun@v1.1.1
+
+      - uses: dfinity/setup-dfx@main
+        with:
+          dfx-version: 0.15.2
 
       - name: Cache mops packages
         uses: actions/cache@v3
@@ -38,8 +43,7 @@ jobs:
             ~/.cache/mops
 
       - name: Install npm packages
-        if: ${{ matrix.mops-version == './cli' }}
-        run: cd cli && npm install
+        run: bun install
 
       - name: Build local cli
         if: ${{ matrix.mops-version == './cli' }}
@@ -54,5 +58,14 @@ jobs:
       - name: Select moc version
         run: mops toolchain use moc ${{ matrix.moc-version }}
 
-      - name: Run tests
-        run: mops test
+      - name: Run replica
+        run: npm run replica
+
+      - name: Deploy backend
+        run: npm run deploy-local
+
+      - name: Build frontend
+        run: npm run build-frontend
+
+      - name: Build docs
+        run: npm run build-docs
