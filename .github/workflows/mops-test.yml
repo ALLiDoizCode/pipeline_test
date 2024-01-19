@@ -12,13 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
+      - name: Checkout repository
+        uses: actions/checkout@v2
       - name: Install dfx
         uses: dfinity/setup-dfx@main
+      - name: Confirm successful installation
+        run: dfx --version
         
       - name: install moc
         run: npx mocv use latest
