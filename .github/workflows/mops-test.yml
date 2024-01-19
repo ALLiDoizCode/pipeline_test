@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: 18
 
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
+        
       - name: install moc
         run: npx mocv use latest
 
