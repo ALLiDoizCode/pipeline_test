@@ -1,3 +1,3 @@
 actor {
-  var name = "jonathan green";
+  var name = "jonathan daniel green";
 };
