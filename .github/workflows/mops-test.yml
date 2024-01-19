@@ -13,6 +13,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: dfinity/setup-dfx@main
+        with:
+          dfx-version: 0.15.2
       - uses: ZenVoich/setup-mops@v1
 
       - name: Run tests
