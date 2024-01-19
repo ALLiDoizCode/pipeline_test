@@ -1,0 +1,58 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      max-parallel: 1
+      matrix:
+        # mops-version: [./cli, ic-mops@latest, ic-mops@0.28.2]
+        moc-version: [0.10.1, latest]
+        mops-version: [./cli]
+        node-version: [18, 20]
+
+    runs-on: ubuntu-latest
+    name: node ${{ matrix.node-version }}, moc ${{ matrix.moc-version }}, ${{ matrix.mops-version }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Cache mops packages
+        uses: actions/cache@v3
+        with:
+          key: mops-packages-${{ hashFiles('mops.toml') }}
+          restore-keys: |
+            mops-packages-${{ hashFiles('mops.toml') }}
+            mops-packages-
+          path: |
+            ~/.cache/mops
+
+      - name: Install npm packages
+        if: ${{ matrix.mops-version == './cli' }}
+        run: cd cli && npm install
+
+      - name: Build local cli
+        if: ${{ matrix.mops-version == './cli' }}
+        run: cd cli && npm run prepare
+
+      - name: Install mops
+        run: npm i -g ${{ matrix.mops-version }}
+
+      - name: Install mops packages
+        run: mops install
+
+      - name: Select moc version
+        run: mops toolchain use moc ${{ matrix.moc-version }}
+
+      - name: Run tests
+        run: mops test
