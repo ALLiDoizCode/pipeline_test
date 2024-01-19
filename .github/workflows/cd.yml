@@ -1,11 +1,11 @@
 name: CD
 
 on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
+  workflow_run:
+      workflows: [CI]
+      branches: [main]
+      types:
+        - completed
 
 jobs:
   test:
