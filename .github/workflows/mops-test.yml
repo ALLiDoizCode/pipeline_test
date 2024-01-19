@@ -16,15 +16,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-          
+
       - name: Install dfx
         uses: dfinity/setup-dfx@main
       - name: Confirm successful installation
         run: dfx --version
         
-      - name: install moc
-        run: npx mocv use latest
-
       - name: install mops
         run: npm i ic-mops -g
 
