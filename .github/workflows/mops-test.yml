@@ -14,11 +14,9 @@ jobs:
       matrix:
         # mops-version: [./cli, ic-mops@latest, ic-mops@0.28.2]
         moc-version: [0.10.1, latest]
-        mops-version: [./cli]
         node-version: [18, 20]
 
     runs-on: ubuntu-latest
-    name: node ${{ matrix.node-version }}, moc ${{ matrix.moc-version }}, ${{ matrix.mops-version }}
 
     steps:
       - uses: actions/checkout@v3
@@ -36,17 +34,6 @@ jobs:
             mops-packages-
           path: |
             ~/.cache/mops
-
-      - name: Install npm packages
-        if: ${{ matrix.mops-version == './cli' }}
-        run: cd cli && npm install
-
-      - name: Build local cli
-        if: ${{ matrix.mops-version == './cli' }}
-        run: cd cli && npm run prepare
-
-      - name: Install mops
-        run: npm i -g ${{ matrix.mops-version }}
 
       - name: Install mops packages
         run: mops install
