@@ -1,3 +1,3 @@
 actor {
-  
+  var name = "jonathan";
 };
