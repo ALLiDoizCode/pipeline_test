@@ -1,12 +1,11 @@
 name: CI
 
 on:
-  push:
+  pull_request:
     branches:
       - main
       - master
       - development
-  pull_request:
 
 jobs:
   test:
@@ -14,22 +13,31 @@ jobs:
       max-parallel: 2
       matrix:
         # mops-version: [./cli, ic-mops@latest, ic-mops@0.28.2]
-        moc-version: [0.10.1, latest]
-        mops-version: [./cli]
-        node-version: [18, 20]
+        moc-version: [latest]
+        mops-version: [ic-mops@latest]
+        node-version: [20]
 
     runs-on: ubuntu-latest
     name: node ${{ matrix.node-version }}, moc ${{ matrix.moc-version }}, ${{ matrix.mops-version }}
 
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+      
+      - name: Install dfx
+        uses: dfinity/setup-dfx@main
+
+      - name: Confirm successful installation
+        run: dfx --version
+      
+      - name: Installign dfx cache
+        run: dfx cache install
 
       - name: Cache mops packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           key: mops-packages-${{ hashFiles('mops.toml') }}
           restore-keys: |

@@ -1,58 +1,81 @@
 name: CD
 
 on:
-  workflow_run:
-      workflows: [CI]
-      branches: [main]
-      types:
-        - completed
+    pull_request:
+        types: [closed]
+        branches:
+            - main
+            - master
+            - staging
+            - development
 
 jobs:
-  test:
-    strategy:
-      max-parallel: 2
-      matrix:
-        # mops-version: [./cli, ic-mops@latest, ic-mops@0.28.2]
-        moc-version: [0.10.1, latest]
-        mops-version: [./cli]
-        node-version: [18, 20]
+    check-branch:
+        runs-on: ubuntu-latest
+        if: github.event.pull_request.merged == true
+        steps:
 
-    runs-on: ubuntu-latest
-    name: node ${{ matrix.node-version }}, moc ${{ matrix.moc-version }}, ${{ matrix.mops-version }}
+          - uses: actions/checkout@v4
+          - uses: actions/setup-node@v4
+            with:
+              node-version: 20
+              cache: 'npm'
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          - name: Cache mops packages
+            uses: actions/cache@v4
+            with:
+              key: mops-packages-${{ hashFiles('mops.toml') }}
+              restore-keys: |
+                mops-packages-${{ hashFiles('mops.toml') }}
+                mops-packages-
+              path: |
+                ~/.cache/mops    
 
-      - name: Cache mops packages
-        uses: actions/cache@v3
-        with:
-          key: mops-packages-${{ hashFiles('mops.toml') }}
-          restore-keys: |
-            mops-packages-${{ hashFiles('mops.toml') }}
-            mops-packages-
-          path: |
-            ~/.cache/mops
+          - name: Install dfx
+            uses: dfinity/setup-dfx@main
+  
+          - name: Confirm successful installation
+            run: dfx --version
+          
+          - name: Installign dfx cache
+            run: dfx cache install
 
-      - name: Install npm packages
-        if: ${{ matrix.mops-version == './cli' }}
-        run: cd cli && npm install
+          - name: Install mops
+            run: npm i -g ic-mops@latest
 
-      - name: Build local cli
-        if: ${{ matrix.mops-version == './cli' }}
-        run: cd cli && npm run prepare
+          - name: Install mops packages
+            run: mops install
 
-      - name: Install mops
-        run: npm i -g ${{ matrix.mops-version }}
+          - name: Deploy to development
+            if: github.base_ref == 'development'
+            run: |
+                echo ${{ secrets.DEVELOPMENT }} | base64 --decode > development.pem
+                dfx identity import --storage-mode=plaintext development development.pem
+                dfx identity use development
+                dfx deploy --network development -y
 
-      - name: Install mops packages
-        run: mops install
+          - name: Deploy to staging
+            if: github.base_ref == 'staging'
+            run: |
+                if [[ "${{ github.head_ref }}" != "development" ]]; then
+                  echo "Only changes from the development branch can be merged into staging."
+                  exit 1
+                else
+                  echo ${{ secrets.STAGING }} | base64 --decode > staging.pem
+                  dfx identity import --storage-mode=plaintext staging staging.pem
+                  dfx identity use staging
+                  dfx deploy --network staging -y
+                fi
 
-      - name: Select moc version
-        run: mops toolchain use moc ${{ matrix.moc-version }}
-
-      - name: Run tests
-        run: mops test
+          - name: Check source for master
+            if: github.base_ref == 'master'
+            run: |
+                if [[ "${{ github.head_ref }}" != "staging" ]]; then
+                  echo "Only changes from the staging branch can be merged into master."
+                  exit 1
+                else
+                  echo ${{ secrets.PROD }} | base64 --decode > prod.pem
+                  dfx identity import --storage-mode=plaintext prod prod.pem
+                  dfx identity use prod
+                  dfx deploy --network ic c-y
+                fi
