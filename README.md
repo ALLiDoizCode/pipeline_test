@@ -1,3 +1,21 @@
+[![GitHub stars](https://img.shields.io/github/stars/ALLiDoizCode/pipeline_test)](https://github.com/ALLiDoizCode/pipeline_test/stargazers)
+![Last Commit](https://img.shields.io/github/last-commit/ALLiDoizCode/pipeline_test)
+![Pull Requests](https://img.shields.io/github/issues-pr-raw/ALLiDoizCode/pipeline_test)
+[![Release Notes](https://img.shields.io/badge/Release%20Notes-📝-brightgreen)](https://github.com/vasu31dev/playwright-ts-lib/blob/main/CHANGELOG.md)
+
+---
+
+<div align="center">
+
+# 🚀 Elevate Your Development.
+
+## "CI/CD Solution For Building Dapps on The Internet Computer Protocol"
+
+</div>
+
+---
+
+
 # pipeline_test
 
 This Repo is a working example of a ci/cd pipeline for Dapps using motoko built on the Internet Computer
